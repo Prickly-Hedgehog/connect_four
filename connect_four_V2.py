@@ -34,9 +34,6 @@ screen_height = squaresize * row_count + squaresize
 screen = pygame.display.set_mode((screen_width, screen_height))
 #==========
 
-# board[1][3] = 1
-# print(board)
-
 def draw_vis_board():
   for c in range(column_count):
     for r in range(row_count):
@@ -65,7 +62,73 @@ def place_piece(player_choice, player_current):
       checking_row -= 1
   return True
 
-draw_vis_board()
+def check_win_horizontal(player_current):
+  checking_row = 0
+  checking_column = 0
+  for c in range(column_count-3):
+    checking_row = 0
+    for r in range(row_count):
+      if board[checking_row][checking_column] == player_current and board[checking_row][checking_column+1] == player_current and board[checking_row][checking_column+2] == player_current and board[checking_row][checking_column+3] == player_current:
+        return player_current
+      else:
+        checking_row += 1
+    checking_column += 1
+  return -1
+
+def check_win_vertical(player_current):
+  checking_row = 0
+  checking_column = 0
+  for r in range(row_count-3):
+    checking_column = 0
+    for c in range(column_count):
+      if board[checking_row][checking_column] == player_current and board[checking_row+1][checking_column] == player_current and board[checking_row+2][checking_column] == player_current and board[checking_row+3][checking_column] == player_current:
+        return player_current
+      else:
+        checking_column += 1
+    checking_row += 1
+  return -1
+
+def check_negative_diagonal_win(player_current):
+  checking_row = 0
+  checking_column = 0
+  for r in range(row_count-3):
+    checking_column = 0
+    for c in range(column_count-3):
+      if board[checking_row][checking_column] == player_current and board[checking_row+1][checking_column+1] == player_current and board[checking_row+2][checking_column+2] == player_current and board[checking_row+3][checking_column+3] == player_current:
+        return player_current
+      else:
+        checking_column += 1
+    checking_row += 1
+  return -1
+
+def check_positive_diagonal_win(player_current):
+  checking_row = row_count-3
+  checking_column = 0
+  for r in range(row_count-3):
+    checking_column = 0
+    for c in range(column_count-3):
+      if board[checking_row][checking_column] == player_current and board[checking_row-1][checking_column+1] == player_current and board[checking_row-2][checking_column+2] == player_current and board[checking_row-3][checking_column+3] == player_current:
+        return player_current
+      else:
+        checking_column += 1
+    checking_row += 1
+  return -1
+
+def check_win(player_current):
+  horizontal_win = check_win_horizontal(player_current)
+  vertical_win = check_win_vertical(player_current)
+  negative_diagonal_win = check_negative_diagonal_win(player_current)
+  positive_diagonal_win = check_positive_diagonal_win(player_current)
+
+  if horizontal_win != -1:
+    return "h", horizontal_win
+  if vertical_win != -1:
+    return "v", vertical_win
+  if positive_diagonal_win != -1:
+    return "pd", positive_diagonal_win
+  if negative_diagonal_win != -1:
+    return "nd", negative_diagonal_win
+  return -1
 
 while playing:
   # mposx = pygame.mouse.get_pos()[0]
@@ -79,6 +142,10 @@ while playing:
       player_choice = int(math.floor(posx/squaresize))
 
       if place_piece(player_choice, player_current) == True:
+        check_win_var = check_win(player_current)
+        if check_win_var != -1:
+          print(check_win_var[0], "player", check_win_var[1])
+  
         player_current, player_next = player_next, player_current
 
   draw_vis_board()

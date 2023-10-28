@@ -1,15 +1,14 @@
 import math
 import pygame
 
-board = [[0,0,0,0,0,0,0],
-         [0,0,0,0,0,0,0],
-         [0,0,0,0,0,0,0],
-         [0,0,0,0,0,0,0],
-         [0,0,0,0,0,0,0],
-         [0,0,0,0,0,0,0]]
+board = []
 
 row_count = 6
 column_count = 7
+
+for i in range(row_count):
+  board_row = [0] * column_count
+  board.append(board_row)
 
 player_current = 1
 player_next = 2
@@ -20,6 +19,8 @@ playing = True
 #==========
 pygame.init()
 pygame.display.set_caption("Connect 4")
+
+my_font = pygame.font.SysFont("monospace", 70)
 
 BLUE = (0, 0, 255)
 BLACK = (0, 0, 0)
@@ -44,7 +45,7 @@ def draw_vis_board():
         pygame.draw.circle(screen, RED, (int(c*squaresize+squaresize/2), int(r*squaresize+squaresize+squaresize/2)), squaresize/2 - 5)
       else:
         pygame.draw.circle(screen, YELLOW, (int(c*squaresize+squaresize/2), int(r*squaresize+squaresize+squaresize/2)), squaresize/2 - 5)
-  pygame.display.update()
+  pygame.display.flip()
 
 def place_piece(player_choice, player_current):
 
@@ -88,7 +89,7 @@ def check_win_vertical(player_current):
     checking_row += 1
   return -1
 
-def check_negative_diagonal_win(player_current):
+def check_win_negative_diagonal(player_current):
   checking_row = 0
   checking_column = 0
   for r in range(row_count-3):
@@ -101,7 +102,7 @@ def check_negative_diagonal_win(player_current):
     checking_row += 1
   return -1
 
-def check_positive_diagonal_win(player_current):
+def check_win_positive_diagonal(player_current):
   checking_row = row_count-3
   checking_column = 0
   for r in range(row_count-3):
@@ -115,27 +116,23 @@ def check_positive_diagonal_win(player_current):
   return -1
 
 def check_win(player_current):
-  horizontal_win = check_win_horizontal(player_current)
-  vertical_win = check_win_vertical(player_current)
-  negative_diagonal_win = check_negative_diagonal_win(player_current)
-  positive_diagonal_win = check_positive_diagonal_win(player_current)
-
-  if horizontal_win != -1:
-    return "h", horizontal_win
-  if vertical_win != -1:
-    return "v", vertical_win
-  if positive_diagonal_win != -1:
-    return "pd", positive_diagonal_win
-  if negative_diagonal_win != -1:
-    return "nd", negative_diagonal_win
+  if check_win_horizontal(player_current) != -1 or check_win_vertical(player_current) != -1 or check_win_positive_diagonal(player_current) != -1 or check_win_negative_diagonal(player_current) != -1:
+    return player_current
   return -1
 
 while playing:
-  # mposx = pygame.mouse.get_pos()[0]
+
+  pygame.draw.rect(screen, BLACK, (0, 0, screen_width, squaresize))
+  mposx = pygame.mouse.get_pos()[0]
+  if player_current == 1:
+    pygame.draw.circle(screen, RED, (round(mposx+50, -2)-50, squaresize/2), squaresize/2)
+  else:
+    pygame.draw.circle(screen, YELLOW, (round(mposx+50, -2)-50, squaresize/2), squaresize/2)
+
   for event in pygame.event.get():
 
     if event.type == pygame.QUIT:
-      playing = False
+      pygame.quit()
 
     if event.type == pygame.MOUSEBUTTONDOWN:
       posx = event.pos[0]
@@ -144,11 +141,25 @@ while playing:
       if place_piece(player_choice, player_current) == True:
         check_win_var = check_win(player_current)
         if check_win_var != -1:
-          print(check_win_var[0], "player", check_win_var[1])
+          if check_win_var == 1:
+            player_colour = RED
+          else:
+            player_colour = YELLOW
+          pygame.draw.rect(screen, BLACK, (0, 0, screen_width, squaresize))
+          win_text = "Player " + str(player_current) + " wins"
+          label = my_font.render(str(win_text), 1, player_colour)
+          label_rect = label.get_rect()
+          label_rect.center = (screen_width/2, squaresize/2)
+          screen.blit(label, label_rect)
+          pygame.display.flip()
+          playing = False
   
         player_current, player_next = player_next, player_current
 
   draw_vis_board()
   pygame.display.flip()
 
-pygame.quit()
+while True:
+  for event in pygame.event.get():
+    if event.type == pygame.QUIT:
+      pygame.quit()
